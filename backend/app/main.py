@@ -5,7 +5,8 @@ from fastapi.middleware.cors import CORSMiddleware
 import os
 from dotenv import load_dotenv
 
-load_dotenv()
+if os.getenv("GITHUB_ACTIONS") != "true":
+    load_dotenv()
 
 app = FastAPI()
 app.include_router(api_router)
