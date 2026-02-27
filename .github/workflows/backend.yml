@@ -33,7 +33,8 @@ jobs:
           --health-retries=5
 
     env:
-      DATABASE_URL: postgresql+psycopg2://testuser:testpass@localhost:5432/testdb
+      DATABASE_URL: postgresql+psycopg2://testuser:testpass@postgres:5432/testdb
+     
 
     steps:
       - uses: actions/checkout@v4
@@ -50,7 +51,7 @@ jobs:
 
       - name: Wait for DB
         run: |
-          until pg_isready -h localhost -p 5432 -U testuser; do
+          until pg_isready -h postgres -p 5432 -U testuser; do
             sleep 1
           done
 
@@ -59,7 +60,5 @@ jobs:
 
       - name: Run tests with coverage
         run: |
-          pytest \
-            --maxfail=2 \
-            --durations=10 \
+          pytest --maxfail=2 --durations=10
             
