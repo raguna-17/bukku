@@ -5,6 +5,12 @@ FastAPI + PostgreSQL + React(Vite)
 
 ---
 
+## Demo
+
+- Frontend (React): https://bukku-furonto.onrender.com  
+- Backend API (FastAPI): https://bukku-bakku.onrender.com  
+- docs: https://bukku-bakku.onrender.com/docs
+
 ## Tech Stack
 
 ### Backend
