@@ -60,6 +60,6 @@ jobs:
       - name: Run tests with coverage
         run: |
           pytest \
-            --maxfail=1 \
+            --maxfail=2 \
             --durations=10 \
             
