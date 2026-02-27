@@ -1,19 +1,23 @@
 # Bukku
 
-JWT認証付きブックマーク管理API  
-FastAPI + PostgreSQL + React(Vite)
+JWT認証付きブックマークAPI  
+FastAPI + PostgreSQL + React (Vite)
 
 ---
 
-## Demo
+## デモ
 
-- Frontend (React): https://bukku-furonto.onrender.com  
-- Backend API (FastAPI): https://bukku-bakku.onrender.com  
-- docs: https://bukku-bakku.onrender.com/docs
+| サービス       | URL                                    |
+|---------------|----------------------------------------|
+| フロントエンド | https://bukku-furonto.onrender.com     |
+| バックエンドAPI | https://bukku-bakku.onrender.com       |
+| ドキュメント   | https://bukku-bakku.onrender.com/docs  |
 
-## Tech Stack
+---
 
-### Backend
+## 技術スタック
+
+### バックエンド
 - FastAPI
 - SQLAlchemy 2.0
 - PostgreSQL 15
@@ -22,46 +26,44 @@ FastAPI + PostgreSQL + React(Vite)
 - Argon2 (passlib)
 - Docker
 
-### Frontend
+### フロントエンド
 - React 19
 - Vite
 
 ---
 
-## Architecture
+## アーキテクチャ
 
 React → FastAPI (JWT認証) → PostgreSQL
 
-- ユーザー単位データ分離
-- Bookmark × Tag N:M構成
-- UniqueConstraint(user_id, url)
-- Connection Pool最適化
-- CORS環境変数制御
+
+- ユーザー単位でデータを分離
+- Bookmark × Tag の N:M 関係
+- URL 重複防止（ユーザー単位）
+- Connection Pool 最適化
+- CORS は環境変数で制御
 
 ---
 
 ## API
 
-Base Path:
+ベースパス: `/api/v1`
 
-/api/v1
-
-### Auth
-POST /api/v1/auth/login
-
-### Bookmarks（JWT必須）
-GET /api/v1/bookmarks  
-POST /api/v1/bookmarks  
-PUT /api/v1/bookmarks/{id}  
-DELETE /api/v1/bookmarks/{id}  
+| エンドポイント           | メソッド | 認証 | 説明              |
+|--------------------------|--------|------|-----------------|
+| /auth/login              | POST   | なし | ログイン           |
+| /bookmarks               | GET    | 必須 | ブックマーク一覧取得 |
+| /bookmarks               | POST   | 必須 | ブックマーク作成   |
+| /bookmarks/{id}          | PUT    | 必須 | ブックマーク更新   |
+| /bookmarks/{id}          | DELETE | 必須 | ブックマーク削除   |
 
 ---
 
-## Run (Docker)
+## Dockerでの起動
 
 ### 1. backend/.env
 
-```
+```env
 POSTGRES_USER=xxx
 POSTGRES_PASSWORD=xxx
 POSTGRES_DB=xxx
@@ -74,41 +76,28 @@ ACCESS_TOKEN_EXPIRE_MINUTES=30
 FRONTEND_ORIGINS=http://localhost:5173
 ```
 
-### 2. 起動
-
-```
+### 2. 起動コマンド
 docker-compose up --build
-```
 
-Backend:
-http://localhost:8000  
-Docs:
-http://localhost:8000/docs
+バックエンド: http://localhost:8000
 
----
+ドキュメント: http://localhost:8000/docs
 
-## Migration
 
-```
+## マイグレーション
 docker-compose exec backend alembic upgrade head
-```
 
----
 
-## Features
+## 特徴
 
-- JWT認証（Bearer）
-- Argon2パスワードハッシュ
-- N:Mタグ管理
-- URL重複防止（ユーザー単位）
-- Postgres Healthcheck
-- SQLAlchemy Connection Pool
+JWT認証（Bearer）
 
----
+Argon2 パスワードハッシュ
 
-## Future Improvements
+N:M タグ管理
 
-- Refresh Token
-- Pagination
-- Full-text Search
-- CI/CD
+URL 重複防止（ユーザー単位）
+
+PostgreSQL ヘルスチェック
+
+SQLAlchemy Connection Pool
