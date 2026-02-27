@@ -50,11 +50,17 @@ jobs:
       - name: Wait for Postgres
         shell: bash
         run: |
-          for i in $(seq 1 30); do
-            pg_isready -h postgres -U testuser && break
-            echo "Waiting for Postgres..."
+          set -e
+          echo "Waiting for Postgres..."
+          for i in $(seq 1 60); do
+            if pg_isready -h postgres -U testuser; then
+              echo "Postgres is ready"
+              exit 0
+            fi
             sleep 2
           done
+          echo "Postgres failed to start in time"
+          exit 1
 
       - name: Run migrations
         run: alembic upgrade head
