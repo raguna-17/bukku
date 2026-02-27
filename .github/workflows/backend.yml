@@ -47,7 +47,14 @@ jobs:
           pip install -r requirements.txt
           pip install pytest pytest-cov httpx sqlalchemy-utils 
 
-      # 手動待機は不要、サービスのヘルスチェックで十分
+      - name: Wait for Postgres
+        run: |
+          for i in {1..30}; do
+            pg_isready -h postgres -U testuser && break
+            echo "Waiting for Postgres..."
+            sleep 2
+          done
+
       - name: Run migrations
         run: alembic upgrade head
 
