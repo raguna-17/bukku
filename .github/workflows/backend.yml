@@ -22,7 +22,7 @@ jobs:
         working-directory: backend
 
     services:
-      postgres:
+      db:
         image: postgres:15
         env:
           POSTGRES_USER: testuser
@@ -36,7 +36,7 @@ jobs:
 
     env:
       # ✅ サービス名で接続できる
-      DATABASE_URL: postgresql+psycopg2://testuser:testpass@postgres:5432/testdb
+      DATABASE_URL: postgresql+psycopg2://testuser:testpass@db:5432/testdb
 
     steps:
       - uses: actions/checkout@v4

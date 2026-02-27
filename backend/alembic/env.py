@@ -12,7 +12,8 @@ BASE_DIR = Path(__file__).resolve().parents[1]
 sys.path.append(str(BASE_DIR))
 
 # ---- .env 読み込み ----
-load_dotenv()
+if os.getenv("GITHUB_ACTIONS") != "true":
+    load_dotenv()
 
 # ---- FastAPI 側の Base を読み込む ----
 from app.db import Base
