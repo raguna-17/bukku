@@ -54,7 +54,6 @@ jobs:
             -e SECRET_KEY=$SECRET_KEY \
             -e ALGORITHM=$ALGORITHM \
             -e PORT=$PORT \
-            --network bridge \
             backend-test \
             sh -c "alembic -x db_url=$TEST_DATABASE_URL upgrade head && pytest --maxfail=2 
               
