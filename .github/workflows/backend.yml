@@ -1,3 +1,4 @@
+# .github/workflows/backend-ci.yml
 name: Backend CI (Docker Build + Migrations + Tests)
 
 on:
@@ -18,6 +19,7 @@ jobs:
       SECRET_KEY: "testsecret123"
       ALGORITHM: "HS256"
       PORT: 8080
+      MODE: test
 
     services:
       db:
@@ -39,13 +41,16 @@ jobs:
         run: |
           docker build \
             --build-arg CONTEXT=. \
-            -f backend/Dockerfile \
+            --build-arg CI=true \
             -t backend-test backend
 
       - name: Wait for Postgres to be ready
         run: |
           echo "Waiting for PostgreSQL..."
-          timeout 60 bash -c 'until pg_isready -h db -U testuser; do sleep 2; done'
+          until [ "$(docker inspect --format='{{.State.Health.Status}}' db)" = "healthy" ]; do
+            echo "PostgreSQLを待っています..."
+            sleep 2
+          done
 
       - name: Run migrations and tests
         run: |
@@ -54,6 +59,6 @@ jobs:
             -e SECRET_KEY=$SECRET_KEY \
             -e ALGORITHM=$ALGORITHM \
             -e PORT=$PORT \
+            -e MODE=$MODE \
             backend-test \
-            sh -c "alembic -x db_url=$TEST_DATABASE_URL upgrade head && pytest --maxfail=2 
-              
+            sh -c "alembic -x db_url=$TEST_DATABASE_URL upgrade head && pytest --maxfail=2"
