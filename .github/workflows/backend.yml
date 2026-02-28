@@ -13,7 +13,7 @@ jobs:
   test:
     runs-on: ubuntu-latest
 
-    # 🔥 ジョブ自体をコンテナで実行
+    # ジョブ自体を Python コンテナで実行
     container:
       image: python:3.11-slim
 
@@ -32,11 +32,11 @@ jobs:
           --health-cmd="pg_isready -U testuser"
           --health-interval=3s
           --health-timeout=3s
-          --health-retries=11
+          --health-retries=20
 
     env:
-      # ✅ サービス名で接続できる
-      DATABASE_URL: postgresql+psycopg2://testuser:testpass@db:5432/testdb
+      # conftest.py で参照される環境変数
+      TEST_DATABASE_URL: postgresql+psycopg2://testuser:testpass@db:5432/testdb
 
     steps:
       - uses: actions/checkout@v4
@@ -53,10 +53,12 @@ jobs:
           pip install pytest pytest-cov httpx sqlalchemy-utils
 
       - name: Wait for Postgres
-        run: timeout 60 bash -c 'until pg_isready -h db -U testuser; do sleep 2; done'
+        run: |
+          echo "Waiting for PostgreSQL to be ready..."
+          timeout 60 bash -c 'until pg_isready -h db -U testuser; do sleep 2; done'
 
       - name: Run migrations
-        run: alembic upgrade head
+        run: alembic -x db_url=$TEST_DATABASE_URL upgrade head
 
       - name: Run tests
         run: pytest --maxfail=2 --durations=10
