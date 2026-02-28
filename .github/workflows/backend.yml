@@ -45,7 +45,7 @@ jobs:
       - name: Wait for Postgres to be ready
         run: |
           echo "Waiting for PostgreSQL..."
-          timeout 60 bash -c 'until pg_isready -h localhost -U testuser; do sleep 2; done'
+          timeout 60 bash -c 'until pg_isready -h db -U testuser; do sleep 2; done'
 
       - name: Run migrations and tests
         run: |
@@ -56,5 +56,5 @@ jobs:
             -e PORT=$PORT \
             --network bridge \
             backend-test \
-            sh -c "alembic -x db_url=$TEST_DATABASE_URL upgrade head && pytest --maxfail=2 --durations=10"
+            sh -c "alembic -x db_url=$TEST_DATABASE_URL upgrade head && pytest --maxfail=2 
               
