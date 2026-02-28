@@ -37,6 +37,8 @@ jobs:
     env:
       # conftest.py で参照される環境変数
       TEST_DATABASE_URL: postgresql+psycopg2://testuser:testpass@db:5432/testdb
+      SECRET_KEY: "testsecjghjkfdhghdfhgfffjgdjgiret123"      # ここに直接文字列を書く
+      ALGORITHM: "HS256"
 
     steps:
       - uses: actions/checkout@v4
