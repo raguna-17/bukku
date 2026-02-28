@@ -1,5 +1,4 @@
-# .github/workflows/backend.yml
-name: Backend CI 
+name: Backend CI/CD
 
 on:
   push:
@@ -13,14 +12,6 @@ on:
 jobs:
   test:
     runs-on: ubuntu-latest
-
-    env:
-      TEST_DATABASE_URL: postgresql+psycopg2://testuser:testpass@db:5432/testdb
-      SECRET_KEY: "testsecret123"
-      ALGORITHM: "HS256"
-      PORT: 8080
-      MODE: test
-
     services:
       db:
         image: postgres:15
@@ -34,28 +25,56 @@ jobs:
           --health-timeout=3s
           --health-retries=20
 
+    env:
+      TEST_DATABASE_URL: postgresql+psycopg2://testuser:testpass@db:5432/testdb
+      SECRET_KEY: "testsecret123"
+      ALGORITHM: "HS256"
+      PORT: 8080
+      MODE: test
+
     steps:
       - uses: actions/checkout@v4
 
-      - name: Wait for Postgres to be ready (max 60s)
+      - name: Build & Test Docker Image
         run: |
-          echo "Waiting for PostgreSQL..."
-          SECONDS=0
-          MAX_WAIT=60
-          until pg_isready -h db -U testuser; do
-            if [ $SECONDS -ge $MAX_WAIT ]; then
-              echo "PostgreSQL did not become ready in $MAX_WAIT seconds"
-              exit 1
-            fi
-            echo "PostgreSQLを待っています..."
-            sleep 2
-          done
-          echo "PostgreSQL is ready!"
+          # テスト用ステージをビルドして実行
+          docker build --target test -t bukku-backend:test ./backend
 
-      - name: Run migrations
-        run: |
-          alembic -x db_url=$TEST_DATABASE_URL upgrade head
+          # CI内で直接コンテナ起動して必要ならマイグレーションも実行
+          docker run --rm \
+            -e TEST_DATABASE_URL=$TEST_DATABASE_URL \
+            -e SECRET_KEY=$SECRET_KEY \
+            -e ALGORITHM=$ALGORITHM \
+            -e PORT=$PORT \
+            -e MODE=$MODE \
+            bukku-backend:test \
+            sh -c "alembic -x db_url=$TEST_DATABASE_URL upgrade head && pytest"
 
-      - name: Run tests
+  deploy:
+    runs-on: ubuntu-latest
+    needs: test
+    if: github.ref == 'refs/heads/main'
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build Production Docker Image
         run: |
-          pytest --maxfail=2
+          docker build --target prod -t bukku-backend:prod ./backend
+
+      - name: Log in to DockerHub
+        uses: docker/login-action@v2
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+
+      - name: Push Docker Image
+        run: |
+          docker tag bukku-backend:prod ${{ secrets.DOCKER_USERNAME }}/bukku-backend:latest
+          docker push ${{ secrets.DOCKER_USERNAME }}/bukku-backend:latest
+
+      - name: Deploy to Render
+        uses: render-examples/deploy@v1
+        with:
+          api_key: ${{ secrets.RENDER_API_KEY }}
+          service_id: ${{ secrets.RENDER_SERVICE_ID }}
+          image: ${{ secrets.DOCKER_USERNAME }}/bukku-backend:latest

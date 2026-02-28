@@ -1,37 +1,41 @@
-# Dockerfile
-ARG CONTEXT=backend
-FROM python:3.11-slim
+# ---------- Base Stage ----------
+FROM python:3.11-slim AS base
 
 WORKDIR /app
 
-ENV PYTHONDONTWRITEBYTECODE=1 \
-    PYTHONUNBUFFERED=1 \
-    PYTHONPATH=/app \
-    PORT=8000 \
-    MODE=production   
+# Python依存関係インストール
+COPY requirements.txt .
+RUN pip install --no-cache-dir --upgrade pip \
+    && pip install --no-cache-dir -r requirements.txt
 
-# 必要パッケージ（CI用に切り替え可能）
-ARG CI=false
-RUN apt-get update && apt-get install -y \
-    $( [ "$CI" = "true" ] && echo "build-essential libpq-dev" ) \
-    && rm -rf /var/lib/apt/lists/*
+# アプリコピー
+COPY app ./app
 
-# Python依存関係
-COPY ${CONTEXT}/requirements.txt ./requirements.txt
-RUN pip install --no-cache-dir -r requirements.txt
+# ---------- Test Stage ----------
+FROM base AS test
 
-# アプリとAlembicをコピー
-COPY ${CONTEXT}/app ./app
-COPY ${CONTEXT}/alembic.ini ./alembic.ini
-COPY ${CONTEXT}/alembic ./alembic
+# テスト用ファイルコピー
+COPY tests ./tests
+COPY pytest.ini ./
 
-# CMDをMODEで切り替え
-CMD ["sh", "-c", "\
-    if [ \"$MODE\" = 'test' ]; then \
-    echo 'Test mode: waiting for DB and running migrations/tests'; \
-    until pg_isready -h db -U testuser; do sleep 2; done; \
-    alembic -x db_url=$TEST_DATABASE_URL upgrade head && pytest --maxfail=2; \
-    else \
-    echo 'Production mode: starting app'; \
-    uvicorn app.main:app --host 0.0.0.0 --port $PORT; \
-    fi"]
+# pytest 実行
+RUN pytest
+
+# ---------- Production Stage ----------
+FROM python:3.11-slim AS prod
+
+WORKDIR /app
+
+# 本番用依存関係とアプリコピー
+COPY --from=base /usr/local/lib/python3.11/site-packages /usr/local/lib/python3.11/site-packages
+COPY --from=base /app /app
+
+# 環境変数
+ENV PYTHONUNBUFFERED=1
+ENV PYTHONDONTWRITEBYTECODE=1
+
+# Render対応のポート
+ENV PORT 8000
+
+# uvicorn起動（RenderがPORTを指定する場合はそれを優先）
+CMD ["sh", "-c", "uvicorn app.main:app --host 0.0.0.0 --port ${PORT}"]
