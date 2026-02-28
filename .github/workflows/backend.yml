@@ -1,4 +1,4 @@
-# .github/workflows/backend-ci.yml
+# .github/workflows/backend.yml
 name: Backend CI (Docker Build + Migrations + Tests)
 
 on:
@@ -44,21 +44,22 @@ jobs:
             --build-arg CI=true \
             -t backend-test backend
 
-      - name: Wait for Postgres to be ready
+      - name: Wait for Postgres to be ready (max 60s)
         run: |
           echo "Waiting for PostgreSQL..."
-          until [ "$(docker inspect --format='{{.State.Health.Status}}' db)" = "healthy" ]; do
+          SECONDS=0
+          MAX_WAIT=60
+          until pg_isready -h db -U testuser; do
+            if [ $SECONDS -ge $MAX_WAIT ]; then
+              echo "PostgreSQL did not become ready in $MAX_WAIT seconds"
+              exit 1
+            fi
             echo "PostgreSQLを待っています..."
             sleep 2
           done
+          echo "PostgreSQL is ready!"
 
       - name: Run migrations and tests
         run: |
-          docker run --rm \
-            -e TEST_DATABASE_URL=$TEST_DATABASE_URL \
-            -e SECRET_KEY=$SECRET_KEY \
-            -e ALGORITHM=$ALGORITHM \
-            -e PORT=$PORT \
-            -e MODE=$MODE \
-            backend-test \
-            sh -c "alembic -x db_url=$TEST_DATABASE_URL upgrade head && pytest --maxfail=2"
+          alembic -x db_url=$TEST_DATABASE_URL upgrade head
+          pytest --maxfail=2
