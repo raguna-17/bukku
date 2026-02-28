@@ -1,3 +1,5 @@
+# ビルド時にどのコンテキストか指定可能にする
+ARG CONTEXT=backend
 FROM python:3.11-slim
 
 ENV PYTHONDONTWRITEBYTECODE=1 \
@@ -6,16 +8,19 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
 
 WORKDIR /app
 
+# システム依存ライブラリ
 RUN apt-get update && apt-get install -y \
     build-essential libpq-dev \
     && rm -rf /var/lib/apt/lists/*
 
-COPY backend/requirements.txt .
+# ARGを使ってCOPYパスを切り替え
+# CONTEXT=backend -> Render用
+# CONTEXT=.       -> CI用
+COPY ${CONTEXT}/requirements.txt ./requirements.txt
 RUN pip install --no-cache-dir -r requirements.txt
 
-COPY backend/app ./app
-COPY backend/alembic.ini .
-COPY backend/alembic ./alembic
+COPY ${CONTEXT}/app ./app
+COPY ${CONTEXT}/alembic.ini ./alembic.ini
+COPY ${CONTEXT}/alembic ./alembic
 
-# Renderは自動で$PORTを参照するのでCMDに--port固定は不要
 CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "0"]
