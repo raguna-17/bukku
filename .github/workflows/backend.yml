@@ -37,7 +37,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Build Docker image (for environment setup, optional)
+      - name: Build Docker image
         run: |
           docker build \
             --build-arg CONTEXT=. \
