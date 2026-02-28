@@ -37,7 +37,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Build Docker image
+      - name: Build Docker image (for environment setup, optional)
         run: |
           docker build \
             --build-arg CONTEXT=. \
@@ -59,7 +59,10 @@ jobs:
           done
           echo "PostgreSQL is ready!"
 
-      - name: Run migrations and tests
+      - name: Run migrations
         run: |
           alembic -x db_url=$TEST_DATABASE_URL upgrade head
+
+      - name: Run tests
+        run: |
           pytest --maxfail=2
