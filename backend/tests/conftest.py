@@ -1,4 +1,3 @@
-# backend/tests/conftest.py
 import os
 import time
 import pytest
@@ -11,30 +10,27 @@ from sqlalchemy.exc import OperationalError
 from app.db import Base, get_db
 from app.main import app
 
-# CI環境では必ず環境変数を使用
+# CI/テスト用 DB URL
 TEST_DATABASE_URL = os.getenv("TEST_DATABASE_URL")
 if not TEST_DATABASE_URL:
-    raise RuntimeError("TEST_DATABASE_URL environment variable must be set in CI")
+    raise RuntimeError("TEST_DATABASE_URL 環境変数が設定されていません")
 
-# エンジン作成
 engine = create_engine(TEST_DATABASE_URL)
 TestingSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
-# DBが起動するまで待機して作成（最大30秒）
+# DB作成を安全に待機
 for _ in range(6):
     try:
         if not database_exists(engine.url):
             create_database(engine.url)
         break
     except OperationalError:
-        time.sleep(5)  # 5秒待機
+        time.sleep(5)
 else:
-    raise RuntimeError("Database not reachable after waiting 30 seconds")
+    raise RuntimeError("Database に接続できません。DBが起動しているか確認してください")
 
-# DB fixture
 @pytest.fixture(scope="function")
 def db_session():
-    # 各テスト関数前にテーブル作成
     Base.metadata.create_all(bind=engine)
     db = TestingSessionLocal()
     try:
@@ -42,7 +38,6 @@ def db_session():
     finally:
         db.rollback()
         db.close()
-        # drop_all はセッション終了時に1回だけ行う方が安定
         Base.metadata.drop_all(bind=engine)
 
 # FastAPI dependency override

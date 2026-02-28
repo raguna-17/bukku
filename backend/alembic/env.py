@@ -1,75 +1,51 @@
+# backend/alembic/env.py
 import os
-import sys
-from logging.config import fileConfig
-from pathlib import Path
-
-from sqlalchemy import create_engine, pool
 from alembic import context
-from dotenv import load_dotenv
+from sqlalchemy import engine_from_config, pool
+from logging.config import fileConfig
+import sys
 
-# ---- パス調整（app を import 可能にする）----
-BASE_DIR = Path(__file__).resolve().parents[1]
-sys.path.append(str(BASE_DIR))
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
+from app.models import Base
 
-# ---- .env 読み込み ----
+# ログ設定
+fileConfig(context.config.config_file_name)
+
+# 本番/ローカルでは .env をロード、CI ではロードしない
 if os.getenv("GITHUB_ACTIONS") != "true":
+    from dotenv import load_dotenv
     load_dotenv()
 
-# ---- FastAPI 側の Base を読み込む ----
-from app.db import Base
-from app import models  # モデルを必ず import（重要）
+# CLI 引数または環境変数で接続先を決定
+db_url = context.get_x_argument(as_dictionary=True).get("db_url")
+DATABASE_URL = db_url or os.getenv("TEST_DATABASE_URL") or os.getenv("DATABASE_URL")
 
-# ---- Alembic config ----
-config = context.config
-
-if config.config_file_name is not None:
-    fileConfig(config.config_file_name)
-
-# ---- DB URL を環境変数から取得 ----
-DATABASE_URL = os.getenv("DATABASE_URL")
 if not DATABASE_URL:
-    raise RuntimeError("DATABASE_URL is not set")
-
-# Alembic に URL を明示的に渡す（超重要）
-config.set_main_option("sqlalchemy.url", DATABASE_URL)
+    raise RuntimeError("DATABASE_URL は設定されていません")
 
 target_metadata = Base.metadata
 
+engine = engine_from_config(
+    {"sqlalchemy.url": DATABASE_URL},
+    prefix="sqlalchemy.",
+    poolclass=pool.NullPool,
+)
 
-# ==========================
-# Offline mode
-# ==========================
 def run_migrations_offline():
     context.configure(
         url=DATABASE_URL,
         target_metadata=target_metadata,
         literal_binds=True,
-        compare_type=True,
+        dialect_opts={"paramstyle": "named"},
     )
-
     with context.begin_transaction():
         context.run_migrations()
 
-
-# ==========================
-# Online mode
-# ==========================
 def run_migrations_online():
-    connectable = create_engine(
-        DATABASE_URL,
-        poolclass=pool.NullPool,
-    )
-
-    with connectable.connect() as connection:
-        context.configure(
-            connection=connection,
-            target_metadata=target_metadata,
-            compare_type=True,
-        )
-
+    with engine.connect() as connection:
+        context.configure(connection=connection, target_metadata=target_metadata)
         with context.begin_transaction():
             context.run_migrations()
-
 
 if context.is_offline_mode():
     run_migrations_offline()
