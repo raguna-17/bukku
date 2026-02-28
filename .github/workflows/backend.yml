@@ -1,5 +1,5 @@
 # .github/workflows/backend.yml
-name: Backend CI (Docker Build + Migrations + Tests)
+name: Backend CI 
 
 on:
   push:
@@ -36,13 +36,6 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
-
-      - name: Build Docker image
-        run: |
-          docker build \
-            --build-arg CONTEXT=. \
-            --build-arg CI=true \
-            -t backend-test backend
 
       - name: Wait for Postgres to be ready (max 60s)
         run: |
