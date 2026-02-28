@@ -38,9 +38,9 @@ jobs:
       - name: Build Docker image
         run: |
           docker build \
-            --build-arg CONTEXT=backend \
+            --build-arg CONTEXT=. \
             -f backend/Dockerfile \
-            -t backend-test .
+            -t backend-test backend
 
       - name: Wait for Postgres to be ready
         run: |
