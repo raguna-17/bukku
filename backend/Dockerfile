@@ -14,7 +14,7 @@ COPY app ./app
 # ---------- Test Stage ----------
 FROM base AS test
 
-# テスト用ファイルコピー
+RUN pip install --no-cache-dir pytest pytest-cov
 COPY tests ./tests
 COPY pytest.ini ./
 
