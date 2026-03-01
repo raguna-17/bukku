@@ -11,8 +11,8 @@ from app.db import Base, get_db
 from app.main import app
 
 # CI/テスト用 DB URL
-TEST_DATABASE_URL = os.getenv("DATABASE_URL")
-if not TEST_DATABASE_URL:
+DATABASE_URL = os.getenv("DATABASE_URL")
+if not DATABASE_URL:
     raise RuntimeError("DATABASE_URL 環境変数が設定されていません")
 
 engine = create_engine(DATABASE_URL)
