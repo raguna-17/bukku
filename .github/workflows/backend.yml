@@ -24,7 +24,7 @@ jobs:
           --health-cmd="pg_isready -U testuser"
           --health-interval=6s
           --health-timeout=6s
-          --health-retries=15
+          --health-retries=10
 
     env:
       DATABASE_URL: postgresql+psycopg2://testuser:testpass@db:5432/testdb
@@ -46,20 +46,14 @@ jobs:
           pip install -r backend/requirements.txt
           pip install pytest pytest-cov httpx sqlalchemy-utils
 
-      - name: Debug Postgres connectivity
-        run: |
-          echo "Checking Postgres connection..."
-          pg_isready -h db -U testuser
-          PGPASSWORD=testpass psql -h db -U testuser -d testdb -c '\l'
-
-      - run: env | grep POSTGRES
+      
 
       - name: Wait for Postgres to be ready
         run: |
           echo "Waiting for Postgres to be ready..."
-          TIMEOUT=90
+          TIMEOUT=60
           ELAPSED=0
-          INTERVAL=6
+          INTERVAL=4
           until pg_isready -h db -U testuser; do
             if [ $ELAPSED -ge $TIMEOUT ]; then
               echo "Postgres did not become ready in $TIMEOUT seconds"
