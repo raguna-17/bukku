@@ -17,8 +17,6 @@ FROM base AS test
 RUN pip install --no-cache-dir pytest pytest-cov httpx sqlalchemy-utils
 COPY tests ./tests
 COPY pytest.ini ./
-COPY alembic.ini ./
-COPY alembic ./alembic
 
 # ---------- Production Stage ----------
 FROM python:3.11-slim AS prod
