@@ -7,8 +7,7 @@ from dotenv import load_dotenv
 if os.getenv("GITHUB_ACTIONS") != "true":
     load_dotenv()
 
-# CI用 TEST_DATABASE_URL を優先
-DATABASE_URL = os.getenv("TEST_DATABASE_URL") or os.getenv("DATABASE_URL")
+DATABASE_URL = os.getenv("DATABASE_URL")
 if not DATABASE_URL:
     raise RuntimeError("DATABASE_URL が設定されていません")
 

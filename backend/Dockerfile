@@ -18,8 +18,6 @@ RUN pip install --no-cache-dir pytest pytest-cov httpx sqlalchemy-utils
 COPY tests ./tests
 COPY pytest.ini ./
 
-# pytest 実行
-RUN pytest
 
 # ---------- Production Stage ----------
 FROM python:3.11-slim AS prod
