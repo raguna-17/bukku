@@ -1,5 +1,5 @@
-# ---------- Base Stage ----------
-FROM python:3.11-slim AS base
+
+FROM python:3.11-slim 
 
 WORKDIR /app
 
@@ -7,14 +7,6 @@ WORKDIR /app
 COPY requirements.txt .
 RUN pip install --no-cache-dir --upgrade pip \
     && pip install --no-cache-dir -r requirements.txt
-
-# アプリコピー
-COPY app ./app
-
-# ---------- Production Stage ----------
-FROM python:3.11-slim AS prod
-
-WORKDIR /app
 
 # 本番用依存関係とアプリコピー
 COPY --from=base /usr/local/lib/python3.11/site-packages /usr/local/lib/python3.11/site-packages
