@@ -14,7 +14,7 @@ COPY app ./app
 # ---------- Test Stage ----------
 FROM base AS test
 
-RUN pip install --no-cache-dir pytest pytest-cov httpx
+RUN pip install --no-cache-dir pytest pytest-cov httpx sqlalchemy-utils
 COPY tests ./tests
 COPY pytest.ini ./
 
