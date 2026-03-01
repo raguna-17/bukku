@@ -19,7 +19,7 @@ engine = create_engine(DATABASE_URL)
 TestingSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
 # DB作成を安全に待機
-for _ in range(20):
+for _ in range(24):
     try:
         if not database_exists(engine.url):
             create_database(engine.url)

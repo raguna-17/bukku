@@ -22,9 +22,9 @@ jobs:
           POSTGRES_DB: testdb
         options: >-
           --health-cmd="pg_isready -U testuser"
-          --health-interval=6s
-          --health-timeout=6s
-          --health-retries=16
+          --health-interval=5s
+          --health-timeout=5s
+          --health-retries=24
 
     env:
       DATABASE_URL: postgresql+psycopg2://testuser:testpass@db:5432/testdb
@@ -51,7 +51,7 @@ jobs:
       - name: Wait for Postgres to be ready
         run: |
           echo "Waiting for Postgres to be ready..."
-          TIMEOUT=100
+          TIMEOUT=120
           ELAPSED=0
           INTERVAL=5
           until pg_isready -h db -U testuser; do
