@@ -11,13 +11,6 @@ RUN pip install --no-cache-dir --upgrade pip \
 # アプリコピー
 COPY app ./app
 
-# ---------- Test Stage ----------
-FROM base AS test
-
-RUN pip install --no-cache-dir pytest pytest-cov httpx sqlalchemy-utils
-COPY tests ./tests
-COPY pytest.ini ./
-
 # ---------- Production Stage ----------
 FROM python:3.11-slim AS prod
 
@@ -30,8 +23,6 @@ COPY --from=base /app /app
 # 環境変数
 ENV PYTHONUNBUFFERED=1
 ENV PYTHONDONTWRITEBYTECODE=1
-
-# Render対応のポート
 ENV PORT 8000
 
 # uvicorn起動（RenderがPORTを指定する場合はそれを優先）

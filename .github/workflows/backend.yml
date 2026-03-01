@@ -43,6 +43,11 @@ jobs:
           pip install -r backend/requirements.txt
           pip install pytest pytest-cov httpx sqlalchemy-utils 
 
+      - name: Check Postgres
+        run: |
+          pg_isready -h db -U testuser
+          psql -h db -U testuser -d testdb -c '\dt'
+
       - name: Wait for Postgres to be ready
         run: |
           echo "Waiting for Postgres to be ready..."
