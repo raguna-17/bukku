@@ -35,20 +35,30 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Build & Test Docker Image
-        run: |
-          # テスト用ステージをビルドして実行
-          docker build --target test -t bukku-backend:test ./backend
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
 
-          # CI内で直接コンテナ起動して必要ならマイグレーションも実行
-          docker run --rm \
-            -e DATABASE_URL=$DATABASE_URL \
-            -e SECRET_KEY=$SECRET_KEY \
-            -e ALGORITHM=$ALGORITHM \
-            -e PORT=$PORT \
-            -e MODE=$MODE \
-            bukku-backend:test \
-            sh -c "alembic upgrade head && pytest"
+      - name: Install deps
+        run: |
+          pip install -r backend/requirements.txt
+          pip install pytest pytest-cov httpx sqlalchemy-utils
+
+      - name: Run migrations
+        working-directory: backend
+        env:
+          DATABASE_URL: postgresql+psycopg2://testuser:testpass@localhost:5432/testdb
+        run: alembic upgrade head
+
+      - name: Run tests
+        working-directory: backend
+        env:
+          DATABASE_URL: postgresql+psycopg2://testuser:testpass@localhost:5432/testdb
+        run: pytest
+
+      - name: Build production image
+        run: docker build --target prod -t bukku-backend:prod ./backend
 
   deploy:
     runs-on: ubuntu-latest
