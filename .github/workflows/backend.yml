@@ -60,10 +60,6 @@ jobs:
           done
           echo "Postgres is ready!"
 
-      - name: Check Postgres connection
-        run: |
-          PGPASSWORD=testpass psql -h db -U testuser -d testdb -c '\dt'
-
       - name: Run migrations
         working-directory: backend
         run: alembic upgrade head
