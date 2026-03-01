@@ -11,11 +11,11 @@ from app.db import Base, get_db
 from app.main import app
 
 # CI/テスト用 DB URL
-TEST_DATABASE_URL = os.getenv("TEST_DATABASE_URL")
+TEST_DATABASE_URL = os.getenv("DATABASE_URL")
 if not TEST_DATABASE_URL:
-    raise RuntimeError("TEST_DATABASE_URL 環境変数が設定されていません")
+    raise RuntimeError("DATABASE_URL 環境変数が設定されていません")
 
-engine = create_engine(TEST_DATABASE_URL)
+engine = create_engine(DATABASE_URL)
 TestingSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
 # DB作成を安全に待機
