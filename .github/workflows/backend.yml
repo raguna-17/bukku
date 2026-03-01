@@ -49,7 +49,7 @@ jobs:
       - name: Wait for Postgres to be ready
         run: |
           echo "Waiting for Postgres to be ready..."
-          TIMEOUT=50
+          TIMEOUT=60
           ELAPSED=0
           INTERVAL=4
           until pg_isready -h db -U testuser; do

@@ -17,8 +17,8 @@ if os.getenv("GITHUB_ACTIONS") != "true":
     load_dotenv()
 
 # CLI 引数または環境変数で接続先を決定
-db_url = context.get_x_argument(as_dictionary=True).get("db_url")
-DATABASE_URL = db_url or  os.getenv("DATABASE_URL")
+db_url_arg = context.get_x_argument(as_dictionary=True).get("db_url")
+DATABASE_URL = db_url_arg or  os.getenv("DATABASE_URL")
 
 if not DATABASE_URL:
     raise RuntimeError("DATABASE_URL は設定されていません")
