@@ -43,6 +43,23 @@ jobs:
           pip install -r backend/requirements.txt
           pip install pytest pytest-cov httpx sqlalchemy-utils 
 
+      - name: Wait for Postgres to be ready
+        run: |
+          echo "Waiting for Postgres to be ready..."
+          TIMEOUT=30  # 最大30秒待つ
+          ELAPSED=0
+          INTERVAL=2
+          until pg_isready -h db -U testuser; do
+            if [ $ELAPSED -ge $TIMEOUT ]; then
+              echo "Postgres did not become ready in $TIMEOUT seconds"
+              exit 1
+            fi
+            echo "Waiting... ($ELAPSED/$TIMEOUT)"
+            sleep $INTERVAL
+            ELAPSED=$((ELAPSED + INTERVAL))
+          done
+          echo "Postgres is ready!"
+
       - name: Run migrations
         working-directory: backend
         run: alembic upgrade head
