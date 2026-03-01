@@ -41,10 +41,12 @@ jobs:
       - name: Install deps
         run: |
           pip install -r backend/requirements.txt
-          pip install pytest pytest-cov httpx sqlalchemy-utils
+          pip install pytest pytest-cov httpx sqlalchemy-utils 
+
       - name: Run migrations
         working-directory: backend
         run: alembic upgrade head
+
       - name: Run tests
         working-directory: backend
         run: pytest
