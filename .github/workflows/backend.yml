@@ -42,13 +42,13 @@ jobs:
 
           # CI内で直接コンテナ起動して必要ならマイグレーションも実行
           docker run --rm \
-            -e TEST_DATABASE_URL=$TEST_DATABASE_URL \
+            -e DATABASE_URL=$DATABASE_URL \
             -e SECRET_KEY=$SECRET_KEY \
             -e ALGORITHM=$ALGORITHM \
             -e PORT=$PORT \
             -e MODE=$MODE \
             bukku-backend:test \
-            sh -c "alembic -x db_url=$TEST_DATABASE_URL upgrade head && pytest"
+            sh -c "alembic upgrade head && pytest"
 
   deploy:
     runs-on: ubuntu-latest
