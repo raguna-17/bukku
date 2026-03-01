@@ -43,15 +43,10 @@ jobs:
           pip install -r backend/requirements.txt
           pip install pytest pytest-cov httpx sqlalchemy-utils 
 
-      - name: Check Postgres
-        run: |
-          pg_isready -h db -U testuser
-          psql -h db -U testuser -d testdb -c '\dt'
-
       - name: Wait for Postgres to be ready
         run: |
           echo "Waiting for Postgres to be ready..."
-          TIMEOUT=30  # 最大30秒待つ
+          TIMEOUT=30
           ELAPSED=0
           INTERVAL=2
           until pg_isready -h db -U testuser; do
@@ -64,6 +59,10 @@ jobs:
             ELAPSED=$((ELAPSED + INTERVAL))
           done
           echo "Postgres is ready!"
+
+      - name: Check Postgres connection
+        run: |
+          PGPASSWORD=testpass psql -h db -U testuser -d testdb -c '\dt'
 
       - name: Run migrations
         working-directory: backend
