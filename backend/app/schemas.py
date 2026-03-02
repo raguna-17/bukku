@@ -1,5 +1,5 @@
 # app/schemas.py
-from pydantic import BaseModel, EmailStr, HttpUrl
+from pydantic import BaseModel, EmailStr, HttpUrl,Field
 from datetime import datetime
 from typing import List, Optional
 from fastapi import Form
@@ -28,13 +28,13 @@ class TagRead(TagBase):
 # ======================
 
 class BookmarkBase(BaseModel):
-    title: str
+    title: str = Field(..., min_length=1)
     url: HttpUrl
     description: Optional[str] = None
 
 
 class BookmarkCreate(BookmarkBase):
-    tags: List[str] = []   # タグ名で受け取る設計（実務的）
+    tags: List[str] = Field(default_factory=list)
 
 
 class BookmarkUpdate(BaseModel):
@@ -52,7 +52,7 @@ class BookmarkRead(BookmarkBase):
     id: int
     created_at: datetime
     updated_at: datetime
-    tags: List[TagRead] = []
+    tags: List[str] = Field(default_factory=list)
 
     class Config:
         from_attributes = True
