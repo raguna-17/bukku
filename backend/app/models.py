@@ -40,11 +40,7 @@ class Bookmark(Base):
     owner = relationship("User", back_populates="bookmarks")
     tags = relationship("Tag", secondary=bookmark_tags, back_populates="bookmarks")
 
-    # 同一ユーザーが同じURLを2回登録できないようにする
-    __table_args__ = (
-        UniqueConstraint("user_id", "url", name="uq_user_url"),
-    )
-
+   
 
 # ===== Tag =====
 class Tag(Base):

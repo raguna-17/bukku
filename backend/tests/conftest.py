@@ -1,55 +1,49 @@
+# tests/conftest.py
+
 import os
-import time
 import pytest
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from fastapi.testclient import TestClient
-from sqlalchemy_utils import database_exists, create_database
-from sqlalchemy.exc import OperationalError
+from alembic import command
+from alembic.config import Config
 
-from app.db import Base, get_db
-from app.main import app
+from app.db import get_db
+from main import app
 
-# CI/テスト用 DB URL
-DATABASE_URL = os.getenv("DATABASE_URL")
-if not DATABASE_URL:
-    raise RuntimeError("DATABASE_URL 環境変数が設定されていません")
+DATABASE_URL = os.environ["DATABASE_URL"]
 
 engine = create_engine(DATABASE_URL)
-TestingSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+TestingSessionLocal = sessionmaker(bind=engine)
 
-# DB作成を安全に待機
-for _ in range(24):
-    try:
-        if not database_exists(engine.url):
-            create_database(engine.url)
-        break
-    except OperationalError:
-        time.sleep(5)
-else:
-    raise RuntimeError("Database に接続できません。DBが起動しているか確認してください")
+
+@pytest.fixture(scope="session", autouse=True)
+def run_migrations():
+    alembic_cfg = Config("alembic.ini")
+    alembic_cfg.set_main_option("sqlalchemy.url", DATABASE_URL)
+    command.upgrade(alembic_cfg, "head")
+    yield
+    command.downgrade(alembic_cfg, "base")
+
 
 @pytest.fixture(scope="function")
-def db_session():
-    Base.metadata.create_all(bind=engine)
-    db = TestingSessionLocal()
-    try:
+def db():
+    connection = engine.connect()
+    transaction = connection.begin()
+    session = TestingSessionLocal(bind=connection)
+
+    yield session
+
+    session.close()
+    transaction.rollback()
+    connection.close()
+
+
+@pytest.fixture(scope="function")
+def client(db):
+    def override_get_db():
         yield db
-    finally:
-        db.rollback()
-        db.close()
-        Base.metadata.drop_all(bind=engine)
 
-# FastAPI dependency override
-def override_get_db():
-    db = TestingSessionLocal()
-    try:
-        yield db
-    finally:
-        db.close()
-
-app.dependency_overrides[get_db] = override_get_db
-
-@pytest.fixture()
-def client():
-    return TestClient(app)
+    app.dependency_overrides[get_db] = override_get_db
+    yield TestClient(app)
+    app.dependency_overrides.clear()

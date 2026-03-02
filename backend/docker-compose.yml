@@ -1,12 +1,8 @@
 services:
   db:
-    image: postgres:15
+    image: postgres:16-alpine
     env_file:
       - .env
-    environment:
-      POSTGRES_USER: ${POSTGRES_USER}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
-      POSTGRES_DB: ${POSTGRES_DB}
     ports:
       - "5432:5432"
     volumes:
@@ -27,10 +23,9 @@ services:
         condition: service_healthy
     ports:
       - "8000:8000"
-    working_dir: /backend
-    # 開発中のみホットリロード用にボリュームを追加してもOK
-    # volumes:
-    #   - ./app:/backend/app:cached
+    working_dir: /sagyou
+    volumes:
+      - ./:/sagyou:cached
 
 volumes:
   postgres_data:

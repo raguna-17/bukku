@@ -1,11 +1,39 @@
-# tests/test_auth.py
-from app.auth import get_password_hash, verify_password, create_access_token
+def create_user(client, email="auth@example.com", password="password123"):
+    return client.post("/users/", json={
+        "email": email,
+        "password": password
+    })
 
-def test_password_hash_verify():
-    pw = "secret123"
-    hashed = get_password_hash(pw)
-    assert verify_password(pw, hashed)
 
-def test_jwt_creation():
-    token = create_access_token({"sub": "1"})
-    assert isinstance(token, str)
+def test_login_success(client):
+    create_user(client)
+
+    res = client.post("/auth/login", json={
+        "email": "auth@example.com",
+        "password": "password123"
+    })
+
+    assert res.status_code == 200
+    data = res.json()
+    assert "access_token" in data
+    assert data["token_type"] == "bearer"
+
+
+def test_login_wrong_password(client):
+    create_user(client)
+
+    res = client.post("/auth/login", json={
+        "email": "auth@example.com",
+        "password": "wrong"
+    })
+
+    assert res.status_code == 400
+
+
+def test_login_nonexistent_user(client):
+    res = client.post("/auth/login", json={
+        "email": "nouser@example.com",
+        "password": "password123"
+    })
+
+    assert res.status_code == 400
