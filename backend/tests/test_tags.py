@@ -1,21 +1,26 @@
+API_PREFIX = "/api/v1"
+
+
+def create_user_and_login(client, email="tag@example.com"):
+    client.post(f"{API_PREFIX}/users/", json={
+        "email": email,
+        "password": "password123"
+    })
+
+    res = client.post(f"{API_PREFIX}/auth/login", json={
+        "email": email,
+        "password": "password123"
+    })
+
+    token = res.json()["access_token"]
+    return {"Authorization": f"Bearer {token}"}
+
+
 def test_tag_reuse(client):
-    headers = None
-
-    # user作成
-    client.post("/users/", json={
-        "email": "tag@example.com",
-        "password": "password123"
-    })
-
-    res = client.post("/auth/login", json={
-        "email": "tag@example.com",
-        "password": "password123"
-    })
-
-    headers = {"Authorization": f"Bearer {res.json()['access_token']}"}
+    headers = create_user_and_login(client)
 
     # 1回目
-    client.post("/bookmarks/", json={
+    client.post(f"{API_PREFIX}/bookmarks/", json={
         "title": "A",
         "url": "https://a.com",
         "description": "",
@@ -23,7 +28,7 @@ def test_tag_reuse(client):
     }, headers=headers)
 
     # 2回目
-    res = client.post("/bookmarks/", json={
+    res = client.post(f"{API_PREFIX}/bookmarks/", json={
         "title": "B",
         "url": "https://b.com",
         "description": "",
@@ -31,4 +36,6 @@ def test_tag_reuse(client):
     }, headers=headers)
 
     assert res.status_code == 200
-    assert res.json()["tags"][0]["name"] == "same"
+
+    data = res.json()
+    assert data["tags"][0]["name"] == "same"

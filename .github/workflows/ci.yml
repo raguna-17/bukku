@@ -19,9 +19,9 @@ jobs:
           - 5432:5432
         options: >-
           --health-cmd="pg_isready -U postgres"
-          --health-interval=10s
+          --health-interval=5s
           --health-timeout=5s
-          --health-retries=5
+          --health-retries=10
 
     env:
       DATABASE_URL: postgresql+psycopg2://postgres:postgres@localhost:5432/test_db
@@ -42,9 +42,13 @@ jobs:
 
       - name: Wait for Postgres
         run: |
-          until pg_isready -h localhost -U postgres; do
+          for i in {1..30}; do
+            pg_isready -h localhost -U postgres && break
+            echo "Waiting for Postgres..."
             sleep 1
           done
+
+          pg_isready -h localhost -U postgres || (echo "Postgres failed to start" && exit 1)
 
       - name: Install Python deps
         run: |

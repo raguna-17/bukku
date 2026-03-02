@@ -1,11 +1,14 @@
-def create_user_and_login(client):
-    client.post("/users/", json={
-        "email": "bm@example.com",
+API_PREFIX = "/api/v1"
+
+
+def create_user_and_login(client, email="bm@example.com"):
+    client.post(f"{API_PREFIX}/users/", json={
+        "email": email,
         "password": "password123"
     })
 
-    res = client.post("/auth/login", json={
-        "email": "bm@example.com",
+    res = client.post(f"{API_PREFIX}/auth/login", json={
+        "email": email,
         "password": "password123"
     })
 
@@ -16,7 +19,7 @@ def create_user_and_login(client):
 def test_create_bookmark(client):
     headers = create_user_and_login(client)
 
-    res = client.post("/bookmarks/", json={
+    res = client.post(f"{API_PREFIX}/bookmarks/", json={
         "title": "Google",
         "url": "https://google.com",
         "description": "search",
@@ -24,21 +27,22 @@ def test_create_bookmark(client):
     }, headers=headers)
 
     assert res.status_code == 200
-    assert res.json()["title"] == "Google"
-    assert len(res.json()["tags"]) == 1
+    data = res.json()
+    assert data["title"] == "Google"
+    assert len(data["tags"]) == 1
 
 
 def test_read_bookmarks(client):
     headers = create_user_and_login(client)
 
-    client.post("/bookmarks/", json={
+    client.post(f"{API_PREFIX}/bookmarks/", json={
         "title": "Google",
         "url": "https://google.com",
         "description": "search",
         "tags": []
     }, headers=headers)
 
-    res = client.get("/bookmarks/", headers=headers)
+    res = client.get(f"{API_PREFIX}/bookmarks/", headers=headers)
 
     assert res.status_code == 200
     assert len(res.json()) == 1
@@ -47,7 +51,7 @@ def test_read_bookmarks(client):
 def test_update_bookmark(client):
     headers = create_user_and_login(client)
 
-    create_res = client.post("/bookmarks/", json={
+    create_res = client.post(f"{API_PREFIX}/bookmarks/", json={
         "title": "Old",
         "url": "https://example.com",
         "description": "old",
@@ -56,22 +60,23 @@ def test_update_bookmark(client):
 
     bookmark_id = create_res.json()["id"]
 
-    res = client.put(f"/bookmarks/{bookmark_id}", json={
+    res = client.put(f"{API_PREFIX}/bookmarks/{bookmark_id}", json={
         "title": "New",
         "url": "https://example.com",
-        "updated_at": "2024-01-01T00:00:00",
+        "description": "updated",
         "tags": ["updated"]
     }, headers=headers)
 
     assert res.status_code == 200
-    assert res.json()["title"] == "New"
-    assert len(res.json()["tags"]) == 1
+    data = res.json()
+    assert data["title"] == "New"
+    assert len(data["tags"]) == 1
 
 
 def test_delete_bookmark(client):
     headers = create_user_and_login(client)
 
-    create_res = client.post("/bookmarks/", json={
+    create_res = client.post(f"{API_PREFIX}/bookmarks/", json={
         "title": "Delete",
         "url": "https://delete.com",
         "description": "",
@@ -80,15 +85,16 @@ def test_delete_bookmark(client):
 
     bookmark_id = create_res.json()["id"]
 
-    res = client.delete(f"/bookmarks/{bookmark_id}", headers=headers)
+    res = client.delete(f"{API_PREFIX}/bookmarks/{bookmark_id}", headers=headers)
+
     assert res.status_code == 200
 
 
 def test_update_other_users_bookmark_404(client):
     # user1
-    headers1 = create_user_and_login(client)
+    headers1 = create_user_and_login(client, email="user1@example.com")
 
-    create_res = client.post("/bookmarks/", json={
+    create_res = client.post(f"{API_PREFIX}/bookmarks/", json={
         "title": "Private",
         "url": "https://private.com",
         "description": "",
@@ -98,22 +104,12 @@ def test_update_other_users_bookmark_404(client):
     bookmark_id = create_res.json()["id"]
 
     # user2
-    client.post("/users/", json={
-        "email": "other@example.com",
-        "password": "password123"
-    })
+    headers2 = create_user_and_login(client, email="user2@example.com")
 
-    res = client.post("/auth/login", json={
-        "email": "other@example.com",
-        "password": "password123"
-    })
-
-    headers2 = {"Authorization": f"Bearer {res.json()['access_token']}"}
-
-    res = client.put(f"/bookmarks/{bookmark_id}", json={
+    res = client.put(f"{API_PREFIX}/bookmarks/{bookmark_id}", json={
         "title": "Hack",
         "url": "https://hack.com",
-        "updated_at": "2024-01-01T00:00:00",
+        "description": "hacked",
         "tags": []
     }, headers=headers2)
 
