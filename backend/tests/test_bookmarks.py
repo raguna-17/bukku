@@ -31,6 +31,18 @@ def test_create_bookmark(client):
     assert data["title"] == "Google"
     assert len(data["tags"]) == 1
 
+def test_create_bookmark_empty_title_422(client):
+    headers = create_user_and_login(client)
+
+    res = client.post(f"{API_PREFIX}/bookmarks/", json={
+        "title": "",
+        "url": "https://example.com",
+        "description": "",
+        "tags": []
+    }, headers=headers)
+
+    assert res.status_code == 422
+
 
 def test_read_bookmarks(client):
     headers = create_user_and_login(client)

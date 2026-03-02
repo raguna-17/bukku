@@ -7,6 +7,13 @@ def create_user(client, email="auth@example.com", password="password123"):
         "password": password
     })
 
+def test_duplicate_email_registration_400(client):
+    create_user(client, email="dup@example.com", password="password123")
+
+    res = create_user(client, email="dup@example.com", password="differentpassword")
+
+    assert res.status_code == 400
+
 
 def test_login_success(client):
     create_user(client)
