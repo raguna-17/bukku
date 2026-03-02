@@ -40,7 +40,9 @@ class BookmarkCreate(BookmarkBase):
 class BookmarkUpdate(BaseModel):
     title: str
     url: HttpUrl
-    updated_at: datetime = datetime.utcnow()
+    description: Optional[str] = None
+    tags: List[str] = Field(default_factory=list)
+    updated_at: datetime = Field(default_factory=datetime.utcnow)
 
     def dict_for_db(self):
         data = self.dict()
@@ -52,7 +54,7 @@ class BookmarkRead(BookmarkBase):
     id: int
     created_at: datetime
     updated_at: datetime
-    tags: List[str] = Field(default_factory=list)
+    tags: List[TagRead] = Field(default_factory=list)
 
     class Config:
         from_attributes = True
