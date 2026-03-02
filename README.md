@@ -15,6 +15,10 @@ FastAPI + PostgreSQL + React (Vite)
 
 ---
 
+
+![alt text](image-1.png)
+
+
 ## 技術スタック
 
 ### バックエンド
