@@ -24,7 +24,7 @@ FastAPI + PostgreSQL + React (Vite)
 ### バックエンド
 - FastAPI
 - SQLAlchemy 2.0
-- PostgreSQL 15
+- postgres:16-alpine
 - Alembic
 - JWT (python-jose)
 - Argon2 (passlib)
@@ -75,7 +75,7 @@ DATABASE_URL=postgresql://xxx:xxx@db:5432/xxx
 
 SECRET_KEY=xxx
 ALGORITHM=HS256
-ACCESS_TOKEN_EXPIRE_MINUTES=30
+ACCESS_TOKEN_EXPIRE_MINUTES=60
 
 FRONTEND_ORIGINS=http://localhost:5173
 ```
